@@ -12,6 +12,14 @@
 
 An Ansible Playbook that performs initial server setup, and installs a k3s Kubernetes cluster.
 
+## Running
+
+Please create an `inventory` file based on the included example file. You should also update `vars/vars.yaml` to ensure it matches your needs.
+
+## Commit Message Convention
+
+This project uses [Gitmoji](https://gitmoji.dev/) for commit organisation. For more details see the [Gitmoji Repository](https://github.com/carloscuesta/gitmoji).
+
 ## Contributors
 
 <!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
@@ -28,3 +36,5 @@ An Ansible Playbook that performs initial server setup, and installs a k3s Kuber
 <!-- prettier-ignore-end -->
 
 <!-- ALL-CONTRIBUTORS-LIST:END -->
+
+This project follows the [all-contributors](https://github.com/all-contributors/all-contributors) specification.
