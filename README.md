@@ -10,7 +10,7 @@
 
 [![GitHub Workflow Status](https://img.shields.io/github/workflow/status/DylanGore-FYP/ansible-playbook-k3s-cluster-deploy/lint-playbook?label=Lint&logo=github&style=for-the-badge)](https://github.com/DylanGore-FYP/ansible-playbook-k3s-cluster-deploy/actions/workflows/lint.yml)
 
-An Ansible Playbook that performs initial server setup, and installes a k3s Kubernetes cluster.
+An Ansible Playbook that performs initial server setup, and installs a k3s Kubernetes cluster.
 
 ## Contributors
 
