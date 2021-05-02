@@ -1,0 +1,118 @@
+- name: Create a New User
+  hosts: k3s_cluster
+  become: true
+  tasks:
+
+- name: Configure SSH & Add Keys
+  hosts: k3s_cluster
+  become: true
+  roles:
+    - role: configure_ssh
+      ssh_key_user: '{{ ansible_ssh_user }}'
+      ssh_keys:
+        - '{{ ssh_key_location }}'
+  tasks:
+    - name: apt Update
+      ansible.builtin.apt:
+        update_cache: true
+        upgrade: dist
+
+- name: Prepare for K3S install
+  hosts: k3s_cluster
+  become: true
+  tasks:
+    - name: Create the k3s directory
+      ansible.builtin.file:
+        path: /etc/rancher/k3s
+        state: directory
+
+    - name: Download k3s install script
+      ansible.builtin.get_url:
+        url: https://get.k3s.io
+        dest: ~/k3s_install.sh
+
+    - name: Make k3s_install.sh executable
+      ansible.builtin.file:
+        dest: ~/k3s_install.sh
+        mode: a+x
+
+- name: Install the first k3s server
+  hosts: k3s_servers[0]
+  become: true
+  tasks:
+    - name: Check if k3s is already installed on intial node
+      stat:
+        path: /usr/local/bin/k3s
+      register: k3s_binary_file
+
+    - name: Install the k3s config file for the initial node
+      ansible.builtin.template:
+        src: templates/k3s-initial-config.yaml.j2
+        dest: /etc/rancher/k3s/config.yaml
+      when: not k3s_binary_file.stat.exists
+
+    - name: Run the k3s install script
+      command: ~/k3s_install.sh
+      when: not k3s_binary_file.stat.exists
+
+    - name: Download the node-token
+      ansible.builtin.fetch:
+        src: /var/lib/rancher/k3s/server/node-token
+        dest: /tmp/k3s_node_token
+
+- name: Install the second and third k3s servers
+  hosts: k3s_servers[1:]
+  vars_files:
+    - vars/vars.yaml
+  become: true
+  tasks:
+    - name: Check if k3s is already installed on additional nodes
+      stat:
+        path: /usr/local/bin/k3s
+      register: k3s_binary_file
+
+    - name: Upload the node token to the new nodes
+      ansible.builtin.template:
+        src: /tmp/k3s_node_token/k3s_01/var/lib/rancher/k3s/server/node-token
+        dest: ~/node_token
+      when: not k3s_binary_file.stat.exists
+
+    - name: Cat the node_token file and save it as an Ansible variable
+      command: cat ~/node_token
+      register: node_token
+      when: not k3s_binary_file.stat.exists
+
+    - name: Remove node_token file
+      ansible.builtin.file:
+        path: ~/node_token
+        state: absent
+
+    - name: Install the k3s config file for the additional nodes
+      ansible.builtin.template:
+        src: templates/k3s-additional-nodes-config.yaml.j2
+        dest: /etc/rancher/k3s/config.yaml
+      when: not k3s_binary_file.stat.exists
+
+    - name: Run the k3s install script on the additional nodes
+      command: ~/k3s_install.sh
+      ignore_errors: true
+      when: not k3s_binary_file.stat.exists
+
+- name: Cleanup local machine
+  hosts: localhost
+  connection: local
+  become: false
+  tasks:
+    - name: Remove node_token file from local machine
+      ansible.builtin.file:
+        path: /tmp/k3s_node_token/k3s_01/var/lib/rancher/k3s/server/node-token
+        state: absent
+
+- name: Cleanup remote hosts
+  hosts: k3s_cluster
+  become: true
+  tasks:
+    - name: Remove k3s install script
+      ansible.builtin.file:
+        path: ~/k3s_install.sh
+        state: absent

@@ -1,0 +1,3 @@
+token: "{{ node_token.stdout_lines[0] | trim }}"
+server: "https://{{ k3s_initial_node_ip }}:6443"
+disable: traefik

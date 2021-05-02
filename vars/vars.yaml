@@ -1,0 +1,2 @@
+k3s_initial_node_ip: 192.168.1.42
+ssh_key_location: ~/.ssh/id_rsa.pub
